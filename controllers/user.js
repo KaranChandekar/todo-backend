@@ -44,4 +44,11 @@ export const getMyProfile = (req, res) => {
   res.status(200).json({ success: true, user: req.user });
 };
 
+export const logoutUser = (req, res) => {
+  res
+    .status(200)
+    .cookie("token", "", { expires: new Date(Date.now()) })
+    .json({ success: true, message: "Logged out!" });
+};
+
 export const getAllUsers = async (req, res) => {};
