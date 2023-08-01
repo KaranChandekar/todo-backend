@@ -2,10 +2,6 @@ import { User } from "../models/user.js";
 import bcrypt from "bcrypt";
 import sendCookie from "../utils/features.js";
 
-export const getAllUsers = async (req, res) => {};
-
-export const getUserDetails = async (req, res) => {};
-
 export const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -30,7 +26,7 @@ export const loginUser = async (req, res) => {
   let user = await User.findOne({ email }).select("+password");
 
   if (!user) {
-    return res.status(404).json({ success: false, error: "Register first!" });
+    return res.status(404).json({ success: false, message: "Register first!" });
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
@@ -38,8 +34,14 @@ export const loginUser = async (req, res) => {
   if (!isMatch) {
     return res
       .status(404)
-      .json({ success: false, error: "Invalid credentials!" });
+      .json({ success: false, message: "Invalid credentials!" });
   }
 
   sendCookie(user, res, 200, `Welcome back, ${user.name}`);
 };
+
+export const getMyProfile = (req, res) => {
+  res.status(200).json({ success: true, user: req.user });
+};
+
+export const getAllUsers = async (req, res) => {};
