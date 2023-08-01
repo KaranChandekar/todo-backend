@@ -10,7 +10,9 @@ config({
 
 // Using middleware
 app.use(express.json());
-app.use("/users", userRouter);
+
+// Using router
+app.use("/api/v1/users", userRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello, world!");
