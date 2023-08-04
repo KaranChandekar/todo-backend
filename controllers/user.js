@@ -1,43 +1,42 @@
 import { User } from "../models/user.js";
 import bcrypt from "bcrypt";
 import sendCookie from "../utils/features.js";
+import errorHandler from "../utils/errorHandler.js";
 
 export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
 
-  let user = await User.findOne({ email });
+    let user = await User.findOne({ email });
 
-  if (user) {
-    return res
-      .status(404)
-      .json({ success: false, error: "User already exists" });
+    if (user) return next(new errorHandler("User already exists", 400));
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user = await User.create({ name, email, password: hashedPassword });
+
+    sendCookie(user, res, 201, "Registered successfully!");
+  } catch (error) {
+    next(error);
   }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  user = await User.create({ name, email, password: hashedPassword });
-
-  sendCookie(user, res, 201, "Registered successfully!");
 };
 
 export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  let user = await User.findOne({ email }).select("+password");
+    let user = await User.findOne({ email }).select("+password");
 
-  if (!user) {
-    return res.status(404).json({ success: false, message: "Register first!" });
+    if (!user) return next(new errorHandler("Register first!", 401));
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) return next(new errorHandler("Invalid credentials!", 401));
+
+    sendCookie(user, res, 200, `Welcome back, ${user.name}`);
+  } catch (error) {
+    next(error);
   }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-
-  if (!isMatch) {
-    return res
-      .status(404)
-      .json({ success: false, message: "Invalid credentials!" });
-  }
-
-  sendCookie(user, res, 200, `Welcome back, ${user.name}`);
 };
 
 export const getMyProfile = (req, res) => {
@@ -50,5 +49,3 @@ export const logoutUser = (req, res) => {
     .cookie("token", "", { expires: new Date(Date.now()) })
     .json({ success: true, message: "Logged out!" });
 };
-
-export const getAllUsers = async (req, res) => {};

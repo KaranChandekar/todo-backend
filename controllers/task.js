@@ -1,50 +1,71 @@
 import { Task } from "../models/task.js";
+import errorHandler from "../utils/errorHandler.js";
 
 export const newTask = async (req, res, next) => {
-  const { title, description } = req.body;
+  try {
+    const { title, description } = req.body;
 
-  await Task.create({
-    title,
-    description,
-    user: req.user,
-  });
+    await Task.create({
+      title,
+      description,
+      user: req.user,
+    });
 
-  res.status(201).json({
-    success: true,
-    message: "Task created successfully",
-  });
+    res.status(201).json({
+      success: true,
+      message: "Task created successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getMyTasks = async (req, res, next) => {
-  const tasks = await Task.find({ user: req.user._id });
+  try {
+    const tasks = await Task.find({ user: req.user._id });
 
-  res.status(200).json({
-    success: true,
-    message: "Tasks fetched successfully",
-    tasks,
-  });
+    res.status(200).json({
+      success: true,
+      message: "Tasks fetched successfully",
+      tasks,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const updateTask = async (req, res, next) => {
-  const task = await Task.findById(req.params.id);
+  try {
+    const task = await Task.findById(req.params.id);
 
-  task.isCompleted = !task.isCompleted;
+    if (!task) return next(new errorHandler("Task not found", 404));
 
-  await task.save();
+    task.isCompleted = !task.isCompleted;
 
-  res.status(200).json({
-    success: true,
-    message: "Task updated successfully",
-  });
+    await task.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Task updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const deleteTask = async (req, res, next) => {
-  const task = await Task.findById(req.params.id);
+  try {
+    const task = await Task.findById(req.params.id);
 
-  await task.deleteOne();
+    if (!task) return next(new errorHandler("Task not found", 404));
 
-  res.status(200).json({
-    success: true,
-    message: "Task deleted successfully",
-  });
+    await task.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Task deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
